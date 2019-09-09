@@ -6,16 +6,18 @@ Created on Sat Aug 31 17:25:15 2019
 """
 
 import cv2
+import sys
+import os
 import numpy as np
 
-
+print(sys.argv[1])
+print(sys.argv[2])
+	
 # Set labels of objects
-object_label_1 = 'Face_1'
-#object_label_2 = 'Background_1'
-
+object_label_1 = sys.argv[1]
 # Create a VideoCapture object and read from input file
-videoName = 'Eating1Round1'
-cap = cv2.VideoCapture('OriVideos/BackCameraClips/' + videoName + '.mp4')
+videoName = sys.argv[2]
+cap = cv2.VideoCapture(videoName)
 
 
 # Get information of the video
@@ -32,7 +34,8 @@ ret, frame_1 = cap.read()
 gray_1 = cv2.cvtColor(frame_1, cv2.COLOR_BGR2GRAY)
 
 # Save the first frame
-cv2.imwrite('Output/FirstFrame/' + videoName +'.jpg', gray_1)
+baseName = os.path.basename(videoName);
+cv2.imwrite('Output/FirstFrame/' + baseName +'.jpg', gray_1)
 
 # Select ROI
 r = cv2.selectROI(frame_1)
@@ -66,11 +69,9 @@ while(cap.isOpened()):
         cv2.imshow('Grayscale Video', gray)
         cv2.imshow('With Rectangle', frame)
         cv2.imshow('Cropped Image', imCrop)
-    
-    # Press 'q' to close all windows
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+
+    else:
         break
-    
    
 # Release everything if job is finished            
 cap.release()
