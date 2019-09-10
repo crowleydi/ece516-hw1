@@ -10,8 +10,8 @@ import sys
 import os
 import numpy as np
 
-print(sys.argv[1])
-print(sys.argv[2])
+print("label: " + sys.argv[1])
+print("file: " + sys.argv[2])
 	
 # Set labels of objects
 object_label_1 = sys.argv[1]
@@ -34,18 +34,21 @@ ret, frame_1 = cap.read()
 gray_1 = cv2.cvtColor(frame_1, cv2.COLOR_BGR2GRAY)
 
 # Save the first frame
-baseName = os.path.basename(videoName);
+baseName = os.path.basename(os.path.splitext(videoName)[0])
 cv2.imwrite('Output/FirstFrame/' + baseName +'.jpg', gray_1)
+
+# make baseName uniq for video/object
+baseName = baseName + '_' + object_label_1
 
 # Select ROI
 r = cv2.selectROI(frame_1)
 print('r=', r)
 # Save the coordinate and size of the rectangle
-np.save('Output/Data/'+ object_label_1 +'.npy', r)    
+np.save('Output/Data/'+ baseName + '.npy', r)    
 
 # Define the codec and create VideoWriter objects
-outRect = cv2.VideoWriter('Output/Videos/' + object_label_1 + '_rect.avi',cv2.VideoWriter_fourcc('M','J','P','G'), fp, (width, height))
-outCropped = cv2.VideoWriter('Output/Videos/' + object_label_1 + '_cropped.avi',cv2.VideoWriter_fourcc('M','J','P','G'), fp, (r[2], r[3])) 
+outRect = cv2.VideoWriter('Output/Videos/' + baseName + '_rect.avi',cv2.VideoWriter_fourcc('M','J','P','G'), fp, (width, height))
+outCropped = cv2.VideoWriter('Output/Videos/' + baseName + '_cropped.avi',cv2.VideoWriter_fourcc('M','J','P','G'), fp, (r[2], r[3])) 
 
 cv2.destroyAllWindows()  
 
