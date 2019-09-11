@@ -72,7 +72,7 @@ while(cap.isOpened()):
         cv2.imshow('Grayscale Video', gray)
         cv2.imshow('With Rectangle', frame)
         cv2.imshow('Cropped Image', imCrop)
-
+        cv2.waitKey(1)
     else:
         break
    
