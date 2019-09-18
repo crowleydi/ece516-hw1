@@ -139,11 +139,11 @@ aps = GenerateAnchorPoints()
 for scale, aspectRatio in zip(Scales, AspectRatios):
 	height = UnitSpacing*scale;
 	width = height*aspectRatio
-	boxShape = (width, height)
+	datawidth = width*height
 	#
 	# Estimate the number of data items as totalFrames * 6
 	y = np.zeros((totalFrames*6,))
-	X = np.zeros((totalFrames*6,boxShape[0],boxShape[1]))
+	X = np.zeros((totalFrames*6,datawidth))
 	dataNo = 0
 	boxes = GenerateBoxes(aps, scale, aspectRatio)
 	for videoName in VideoGroundTruth:
@@ -163,7 +163,7 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 			for face in faceBoxes:
 				data = ExtractBox(gray, face)
 				y[dataNo] = 1
-				X[dataNo,:width,:height] = data
+				X[dataNo,:] = data.flatten()
 				dataNo = dataNo + 1
 
 			# shuffle the other boxes so we always grab random boxes
@@ -174,7 +174,7 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 			for i in range(0,len(faceBoxes)):
 				data = ExtractBox(gray, otherBoxes[i])
 				y[dataNo] = 0
-				X[dataNo,:width,:height] = data
+				X[dataNo,:] = data.flatten()
 				dataNo = dataNo + 1
 
 			if vf == 0:
@@ -201,7 +201,7 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 			vf = vf + 1
 
 	y = np.resize(y,(dataNo,))
-	X = np.resize(X,(dataNo,boxShape[0],boxShape[1]))
+	X = np.resize(X,(dataNo,datawidth))
 
 	np.save("y_{}_{}.npy".format(scale,aspectRatio), y)
 	np.save("X_{}_{}.npy".format(scale,aspectRatio), X)
