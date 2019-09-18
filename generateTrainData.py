@@ -100,26 +100,18 @@ def BuildTrainBoxes(faces, boxes):
 	faceBoxes = []
 	# for each face...
 	for face in faces:
-		bestTh = -1
-		bestidx = -1
-		idx = 0
-		# for each box
 		for box in boxes:
 			# calculate the IoU
 			th = CalcOverlap(face, box)
 			# keep the best one
-			if th > bestTh:
-				bestTh = th
-				bestidx = idx
-			idx = idx + 1
+			if th > MinThreshold:
+				print("found facebox threshold: " + str(th))
+				# keep the box which matches the face
+				faceBoxes.append(box)
 
-		# if we found a good box and it meets the minimum threshold
-		if bestTh > MinThreshold:
-			print("best threshold: " + str(bestTh))
-			# keep the best box which matches the face
-			faceBoxes.append(boxes[bestidx])
-			# remove the box from boxes list
-			boxes.remove(boxes[bestidx])
+	# remove the face boxes from boxes list
+	for faceBox in faceBoxes:
+		boxes.remove(faceBox)
 
 	return faceBoxes, boxes
 
@@ -141,10 +133,13 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 	width = height*aspectRatio
 	datawidth = width*height
 	#
-	# Estimate the number of data items as totalFrames * 6
-	y = np.zeros((totalFrames*6,))
-	X = np.zeros((totalFrames*6,datawidth))
+	# Estimate the number of data items as 1024
+	estimate = 1024
+	y = np.zeros((estimate,))
+	groups = np.zeros((estimate,))
+	X = np.zeros((estimate,datawidth))
 	dataNo = 0
+	imgNo = 0
 	boxes = GenerateBoxes(aps, scale, aspectRatio)
 	for videoName in VideoGroundTruth:
 		vf = 0
@@ -155,14 +150,21 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 			ret, frame = cap.read()
 			if ret == False:
 				break
-
+			imgNo = imgNo + 1
 			# Convert to grayscale
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+			if len(y) < dataNo + 2*len(faceBoxes):
+				print("resizing arrays to " + str(len(y)*2))
+				y = np.resize(y,(len(y)*2,))
+				groups = np.resize(groups,(len(y)*2,))
+				X = np.resize(X,(len(y)*2,datawidth))
 
 			# Extract faceboxes data
 			for face in faceBoxes:
 				data = ExtractBox(gray, face)
 				y[dataNo] = 1
+				groups[dataNo] = imgNo
 				X[dataNo,:] = data.flatten()
 				dataNo = dataNo + 1
 
@@ -174,24 +176,22 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 			for i in range(0,len(faceBoxes)):
 				data = ExtractBox(gray, otherBoxes[i])
 				y[dataNo] = 0
+				groups[dataNo] = imgNo
 				X[dataNo,:] = data.flatten()
 				dataNo = dataNo + 1
 
 			if vf == 0:
 				# draw the original GT face boxes
 				for face in faces:
-					print(face)
-					cv2.rectangle(gray,(face[0],face[1]),(face[0]+face[2],face[1]+face[3]),(128,0,0),3)
+					cv2.rectangle(frame,(face[0],face[1]),(face[0]+face[2],face[1]+face[3]),(128,0,0),3)
 				# draw the best matching face boxes
 				for face in faceBoxes:
-					print(face)
-					cv2.rectangle(gray,(face[0],face[1]),(face[0]+face[2],face[1]+face[3]),(0,0,0),3)
+					cv2.rectangle(frame,(face[0],face[1]),(face[0]+face[2],face[1]+face[3]),(0,0,0),3)
 				# draw the randomly selected boxes
 				for i in range(0,len(faceBoxes)):
 					ob = otherBoxes[i]
-					print(ob)
-					cv2.rectangle(gray,(ob[0],ob[1]),(ob[0]+ob[2],ob[1]+ob[3]),(255,0,0),3)
-				#cv2.imshow("frame 0", gray)
+					cv2.rectangle(frame,(ob[0],ob[1]),(ob[0]+ob[2],ob[1]+ob[3]),(255,0,0),3)
+				#cv2.imshow("frame 0", frame)
 				#cv2.waitKey(0)
 				#cv2.destroyAllWindows()
 
@@ -200,8 +200,14 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 				ret, frame = cap.read()
 			vf = vf + 1
 
+	print("resizing from "+str(estimate)+" to "+str(dataNo))
 	y = np.resize(y,(dataNo,))
+	groups = np.resize(groups,(dataNo,))
 	X = np.resize(X,(dataNo,datawidth))
 
+	print("writing data files...")
 	np.save("y_{}_{}.npy".format(scale,aspectRatio), y)
+	np.save("groups_{}_{}.npy".format(scale,aspectRatio), groups)
 	np.save("X_{}_{}.npy".format(scale,aspectRatio), X)
+
+print("done")
