@@ -100,14 +100,20 @@ def BuildTrainBoxes(faces, boxes):
 	faceBoxes = []
 	# for each face...
 	for face in faces:
+		best_box = 0
+		best_th = 0
 		for box in boxes:
 			# calculate the IoU
 			th = CalcOverlap(face, box)
-			# keep the best one
-			if th > MinThreshold:
-				print("found facebox threshold: " + str(th))
-				# keep the box which matches the face
-				faceBoxes.append(box)
+			# keep best box
+			if th > best_th:
+				best_box = box
+				best_th = th
+		# keep the best box which overlaps the face
+		# and exceeds threshold
+		if best_th > MinThreshold:
+			print("found facebox threshold: " + str(best_th))
+			faceBoxes.append(best_box)
 
 	# remove the face boxes from boxes list
 	for faceBox in faceBoxes:
@@ -133,8 +139,8 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 	width = height*aspectRatio
 	datawidth = width*height
 	#
-	# Estimate the number of data items as 1024
-	estimate = 1024
+	# Estimate the number of data items as 4096
+	estimate = 4096
 	y = np.zeros((estimate,))
 	groups = np.zeros((estimate,))
 	X = np.zeros((estimate,datawidth))
