@@ -1,3 +1,4 @@
 *.npy
 videos
 Output
+.ipynb_checkpoints
