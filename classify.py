@@ -110,7 +110,6 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 		parameter_grid)
 	print("Cross-validation scores: {}".format(scores))
 	print("Training final classifier....")
-	clf = BoxClassifier(params)
-	clf.fit(X, y)
+	clf = BoxClassifier(**params).fit(X,y)
 	print("Saving classifier...")
 	dump(clf, "clf_{}_{}.joblib".format(scale,aspectRatio))
