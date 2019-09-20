@@ -1,12 +1,13 @@
 import numpy as np
+from joblib import dump, load
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ParameterGrid, KFold
 from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 
 class BoxClassifier(BaseEstimator, ClassifierMixin):
-	def __init__(self, numPCA, C, gamma):
-		self.numPCA_ = numPCA
+	def __init__(self, C, gamma):
+		self.numPCA_ = 120
 		self.C_ = C
 		self.gamma_ = gamma
 	
@@ -23,7 +24,7 @@ class BoxClassifier(BaseEstimator, ClassifierMixin):
 	def score(self, X, y):
 		y_predict = self.predict(X)
 		correct = 0
-		for i in len(y):
+		for i in range(0,len(y)):
 			if y[i] == y_predict[i]:
 				correct = correct + 1
 		accuracy=correct/len(y)
@@ -77,23 +78,24 @@ def nested_cv(X, y, groups, inner_cv, outer_cv, Classifier, parameter_grid):
 		# Build classifier on best parameters using outer training set
 		# This is done over all parameters evaluated through a single
 		# outer fold and all inner folds.
+		print("Best params:")
 		print(best_params)
 		clf = Classifier(**best_params)
 		clf.fit(X[training_samples], y[training_samples])
 		# evaluate
 		outer_scores.append(clf.score(X[test_samples], y[test_samples]))
-
-	return np.array(outer_scores)
+	return np.array(outer_scores), best_params
 
 param_dict = {
 	'C': [1e3, 5e3, 1e4, 5e4, 1e5],
-	'numPCA': [100, 150, 200],
+	#'numPCA': [100, 150, 200],
 	'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]
 	}
 Scales=[1, 1, 2, 2]
 AspectRatios=[1, 2, 1, 2]
 
 for scale, aspectRatio in zip(Scales, AspectRatios):
+	print("Loading data...")
 	X = np.load("X_{}_{}.npy".format(scale,aspectRatio))
 	y = np.load("y_{}_{}.npy".format(scale,aspectRatio))
 	groups = np.load("groups_{}_{}.npy".format(scale,aspectRatio))
@@ -102,7 +104,12 @@ for scale, aspectRatio in zip(Scales, AspectRatios):
 	outer_cv = KFold(n_splits=5, shuffle=True, random_state=6)
 
 	parameter_grid = ParameterGrid(param_dict)
-	scores = nested_cv(X, y, groups, inner_cv, outer_cv, BoxClassifier,
+	print("Finding best model for scale/aspect {}/{}...".format(scale,aspectRatio))
+	scores,params = nested_cv(X, y, groups, inner_cv, outer_cv, BoxClassifier,
 		parameter_grid)
-
 	print("Cross-validation scores: {}".format(scores))
+	print("Training final classifier....")
+	clf = BoxClassifier(params)
+	clf.fit(X, y)
+	print("Saving classifier...")
+	dump(clf, "clf_{}_{}.joblib".format(scale,aspectRatio))
