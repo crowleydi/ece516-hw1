@@ -175,31 +175,43 @@ if args.traincv == True:
 		dump(clf, "clf_{}_{}.joblib".format(scale,aspectRatio))
 
 elif args.video:
+	boxes = [0, 0, 0, 0]
+	clf = [0, 0, 0, 0]
+	aps = GenerateAnchorPoints()
+	i = 0
+	for scale, aspectRatio in zip(Scales, AspectRatios):
+		# load the appropriate model
+		print("Loading model {}/{}...".format(scale,aspectRatio))
+		clf[i] = load("clf_{}_{}.joblib".format(scale,aspectRatio))
+
+		# generate the boxes
+		boxes[i] = GenerateBoxes(aps, scale, aspectRatio)
+		i = i + 1
+
 	# read the first frame
-	print("Reading frame...")
+	print("Reading video...")
 	cap = cv2.VideoCapture(args.video[0])
-	ret, frame = cap.read()
-	if ret == False:
-		print("Could not read video file: {}".format(args.video))
-	else:
+	fno = 0
+	while True:
+		ret, frame = cap.read()
+		fno = fno + 1
+		if ret == False:
+			break
 		# Convert to grayscale
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		aps = GenerateAnchorPoints()
-		for scale, aspectRatio in zip(Scales, AspectRatios):
-			# load the appropriate model
-			print("Loading model {}/{}...".format(scale,aspectRatio))
-			clf = load("clf_{}_{}.joblib".format(scale,aspectRatio))
-
-			# generate the boxes
-			boxes = GenerateBoxes(aps, scale, aspectRatio)
-			datawidth = boxes[0][2]*boxes[0][3]
-
+		for n in range(len(boxes)):
 			# extract the boxes from the image
-			X = np.zeros((len(boxes),datawidth))
-			i = 0
-			for box in boxes:
-				X[i,:] = ExtractBox(gray, box).flatten()
-				i = i + 1
+			datawidth = boxes[n][0][2]*boxes[n][0][3]
+			X = np.zeros((len(boxes[n]),datawidth))
+			for i in range(len(boxes[n])):
+				X[i,:] = ExtractBox(gray, boxes[n][i]).flatten()
+			y = clf[n].predict_proba(X)[:,1]
+			ys = sorted(y)
+			print("frame {}".format(fno))
+			print(ys[-1])
+			print(ys[-2])
+			print(ys[-3])
 
-			y = clf.predict_proba(X)[:,1]
-			print(y)
+		for n in range(9):
+			ret, frame = cap.read()
+			fno = fno + 1
