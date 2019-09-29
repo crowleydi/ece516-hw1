@@ -24,6 +24,9 @@ class BoxClassifier(BaseEstimator, ClassifierMixin):
 	def predict(self, X):
 		return self.svc_.predict(self.pca_.transform(X))
 	
+	def predict_proba(self, X):
+		return self.svc_.predict_proba(self.pca_.transform(X))
+
 	def score(self, X, y):
 		return np.sum(y==self.predict(X))/len(y)
 
@@ -91,6 +94,8 @@ def nested_cv(X, y, groups, inner_cv, outer_cv, Classifier, parameter_grid):
 	# for each split of the data in the outer cross-validation
 	# (split method returns indices of training and test parts)
 	#
+	outer_params = {}
+	outer_score = -np.inf
 	for training_samples, test_samples in outer_cv.split(X, y, groups):
 		# find best parameter using inner cross-validation
 		best_parms = {}
@@ -118,6 +123,9 @@ def nested_cv(X, y, groups, inner_cv, outer_cv, Classifier, parameter_grid):
 				# if better than so far, remember parameters
 				best_score = mean_score
 				best_params = parameters
+			if mean_score > outer_score:
+				outer_score = mean_score
+				outer_params = parameters
 
 		# Build classifier on best parameters using outer training set
 		# This is done over all parameters evaluated through a single
@@ -128,7 +136,7 @@ def nested_cv(X, y, groups, inner_cv, outer_cv, Classifier, parameter_grid):
 		clf.fit(X[training_samples], y[training_samples])
 		# evaluate
 		outer_scores.append(clf.score(X[test_samples], y[test_samples]))
-	return np.array(outer_scores), best_params
+	return np.array(outer_scores), outer_params
 
 def ExtractBox(img, box):
 	sub = img[box[1]:box[1]+box[3],box[0]:box[0]+box[2]]
@@ -142,9 +150,9 @@ args = parser.parse_args()
 
 if args.traincv == True:
 	param_dict = {
-		'C': [1e3, 5e3, 1e4, 5e4, 1e5],
+		'C': [1, 10, 100, 1000, 10000],
 		#'numPCA': [100, 150, 200],
-		'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]
+		'gamma': [5e-5, 1e-4, 5e-4, 1e-3]
 		}
 
 	for scale, aspectRatio in zip(Scales, AspectRatios):
@@ -193,5 +201,5 @@ elif args.video:
 				X[i,:] = ExtractBox(gray, box).flatten()
 				i = i + 1
 
-			y = clf.predict(X)
-			#print(y)
+			y = clf.predict_proba(X)[:,1]
+			print(y)
