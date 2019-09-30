@@ -138,6 +138,14 @@ def nested_cv(X, y, groups, inner_cv, outer_cv, Classifier, parameter_grid):
 		outer_scores.append(clf.score(X[test_samples], y[test_samples]))
 	return np.array(outer_scores), outer_params
 
+
+def CalcFaces(y, thresh):
+	total = 0
+	for yy in y:
+		if yy > thresh:
+			total = total + 1
+	return total
+
 def ExtractBox(img, box):
 	sub = img[box[1]:box[1]+box[3],box[0]:box[0]+box[2]]
 	return sub
@@ -145,8 +153,11 @@ def ExtractBox(img, box):
 parser = argparse.ArgumentParser()
 parser.add_argument("--traincv", help="Train using cross-validation",
                     action="store_true")
-parser.add_argument("--video", nargs=1, action='store', help="inference the first frame of the specified video file")
+parser.add_argument("--video", action='store', help="inference the first frame of the specified video file")
+parser.add_argument("--skip", type=int, default=50, action='store', help="number of frames to skip while processing video")
+parser.add_argument("--threshold", type=float, default=0.9, action='store', help="box must exceed this threshold to be declared a face.")
 args = parser.parse_args()
+
 
 if args.traincv == True:
 	param_dict = {
@@ -169,6 +180,7 @@ if args.traincv == True:
 		scores,params = nested_cv(X, y, groups, inner_cv, outer_cv, BoxClassifier,
 			parameter_grid)
 		print("Cross-validation scores: {}".format(scores))
+		print("Best parameters: {}".format(params))
 		print("Training final classifier....")
 		clf = BoxClassifier(**params).fit(X,y,probability=True)
 		print("Saving classifier...")
@@ -190,7 +202,7 @@ elif args.video:
 
 	# read the first frame
 	print("Reading video...")
-	cap = cv2.VideoCapture(args.video[0])
+	cap = cv2.VideoCapture(args.video)
 	fno = 0
 	while True:
 		ret, frame = cap.read()
@@ -208,10 +220,8 @@ elif args.video:
 			y = clf[n].predict_proba(X)[:,1]
 			ys = sorted(y)
 			print("frame {}".format(fno))
-			print(ys[-1])
-			print(ys[-2])
-			print(ys[-3])
+			print(CalcFaces(ys,args.threshold))
 
-		for n in range(9):
+		for n in range(args.skip-1):
 			ret, frame = cap.read()
 			fno = fno + 1
