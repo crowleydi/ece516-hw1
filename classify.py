@@ -15,7 +15,7 @@ class BoxClassifier(BaseEstimator, ClassifierMixin):
 	
 	def fit(self, X ,y, probability=False):
 		self.pca_ = PCA(n_components=self.numPCA_,
-			svd_solver='randomized').fit(X)
+			svd_solver='randomized', whiten=True).fit(X)
 		X_pca = self.pca_.transform(X)
 		self.svc_ = SVC(kernel='rbf', C=self.C_, gamma=self.gamma_,
 			probability=probability, class_weight='balanced').fit(X_pca, y)
