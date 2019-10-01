@@ -154,8 +154,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--traincv", help="Train using cross-validation",
                     action="store_true")
 parser.add_argument("--video", action='store', help="inference the first frame of the specified video file")
-parser.add_argument("--skip", type=int, default=50, action='store', help="number of frames to skip while processing video")
-parser.add_argument("--threshold", type=float, default=0.9, action='store', help="box must exceed this threshold to be declared a face.")
+parser.add_argument("--skip", type=int, default=60, action='store', help="number of frames to skip while processing video")
+parser.add_argument("--threshold", type=float, default=0.95, action='store', help="box must exceed this threshold to be declared a face.")
 args = parser.parse_args()
 
 
@@ -219,8 +219,19 @@ elif args.video:
 				X[i,:] = ExtractBox(gray, boxes[n][i]).flatten()
 			y = clf[n].predict_proba(X)[:,1]
 			ys = sorted(y)
-			print("frame {}".format(fno))
-			print(CalcFaces(ys,args.threshold))
+
+			for pct,box in zip(y,boxes[n]):
+				color = (128,128,128)
+				thick = 1
+				if pct > args.threshold:
+					color = (0,255,0)
+					thick = 3
+				cv2.rectangle(frame,
+					(box[0],box[1]),
+					(box[0]+box[2],box[1]+box[3]),
+					color, thickness=thick)
+
+		cv2.imwrite("frame%04d.jpeg"%(fno), frame)
 
 		for n in range(args.skip-1):
 			ret, frame = cap.read()
