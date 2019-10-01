@@ -1,0 +1,64 @@
+Loading data...
+Finding best model for scale/aspect 1/1...
+Best params:
+{'C': 100, 'gamma': 0.001}
+Best params:
+{'C': 100, 'gamma': 0.001}
+Best params:
+{'C': 100, 'gamma': 0.001}
+Best params:
+{'C': 100, 'gamma': 0.001}
+Best params:
+{'C': 100, 'gamma': 0.001}
+Cross-validation scores: [0.93921569 0.93320236 0.94499018 0.95088409 0.93320236]
+Best parameters: {'C': 100, 'gamma': 0.001}
+Training final classifier....
+Saving classifier...
+Loading data...
+Finding best model for scale/aspect 1/2...
+Best params:
+{'C': 100, 'gamma': 0.001}
+Best params:
+{'C': 1000, 'gamma': 0.0005}
+Best params:
+{'C': 100, 'gamma': 0.001}
+Best params:
+{'C': 100, 'gamma': 0.001}
+Best params:
+{'C': 100, 'gamma': 0.001}
+Cross-validation scores: [0.95646259 0.95918367 0.96185286 0.95776567 0.95640327]
+Best parameters: {'C': 100, 'gamma': 0.001}
+Training final classifier....
+Saving classifier...
+Loading data...
+Finding best model for scale/aspect 2/1...
+Best params:
+{'C': 10000, 'gamma': 0.001}
+Best params:
+{'C': 10000, 'gamma': 0.001}
+Best params:
+{'C': 1000, 'gamma': 0.001}
+Best params:
+{'C': 10000, 'gamma': 0.001}
+Best params:
+{'C': 100, 'gamma': 0.001}
+Cross-validation scores: [0.96536145 0.98042169 0.98192771 0.98340875 0.97888386]
+Best parameters: {'C': 10000, 'gamma': 0.001}
+Training final classifier....
+Saving classifier...
+Loading data...
+Finding best model for scale/aspect 2/2...
+Best params:
+{'C': 100, 'gamma': 0.0001}
+Best params:
+{'C': 100, 'gamma': 0.0001}
+Best params:
+{'C': 100, 'gamma': 0.0001}
+Best params:
+{'C': 10000, 'gamma': 5e-05}
+Best params:
+{'C': 10000, 'gamma': 5e-05}
+Cross-validation scores: [0.96391753 0.97938144 0.98969072 0.96907216 0.98453608]
+Best parameters: {'C': 10000, 'gamma': 5e-05}
+Training final classifier....
+Saving classifier...
