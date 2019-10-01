@@ -1,5 +1,4 @@
 *.npy
-*.joblib
 videos
 Output
 .ipynb_checkpoints

@@ -184,7 +184,7 @@ if args.traincv == True:
 		print("Training final classifier....")
 		clf = BoxClassifier(**params).fit(X,y,probability=True)
 		print("Saving classifier...")
-		dump(clf, "clf_{}_{}.joblib".format(scale,aspectRatio))
+		dump(clf, "models/clf_{}_{}.joblib".format(scale,aspectRatio))
 
 elif args.video:
 	boxes = [0, 0, 0, 0]
@@ -194,7 +194,7 @@ elif args.video:
 	for scale, aspectRatio in zip(Scales, AspectRatios):
 		# load the appropriate model
 		print("Loading model {}/{}...".format(scale,aspectRatio))
-		clf[i] = load("clf_{}_{}.joblib".format(scale,aspectRatio))
+		clf[i] = load("models/clf_{}_{}.joblib".format(scale,aspectRatio))
 
 		# generate the boxes
 		boxes[i] = GenerateBoxes(aps, scale, aspectRatio)
@@ -231,7 +231,7 @@ elif args.video:
 					(box[0]+box[2],box[1]+box[3]),
 					color, thickness=thick)
 
-		cv2.imwrite("frame%04d.jpeg"%(fno), frame)
+		cv2.imwrite("results/frame%04d.jpeg"%(fno), frame)
 
 		for n in range(args.skip-1):
 			ret, frame = cap.read()
